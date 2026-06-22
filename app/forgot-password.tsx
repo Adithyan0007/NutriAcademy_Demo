@@ -8,34 +8,43 @@ import {
   View,
 } from "react-native";
 
-import { loginUser } from "../data/localDb";
+import { resetPassword } from "../data/localDb";
 
-export default function Login() {
+export default function ForgotPassword() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
+  const [newPassword, setNewPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
 
-  async function handleLogin() {
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  async function handleResetPassword() {
     setError("");
+    setSuccess("");
 
     const trimmedEmail = email.trim().toLowerCase();
-    const trimmedPassword = password.trim();
+    const trimmedPassword = newPassword.trim();
 
     if (!trimmedEmail || !trimmedPassword) {
-      setError("Please enter email and password.");
+      setError("Please enter email and new password.");
       return;
     }
 
-    const result = await loginUser(trimmedEmail, trimmedPassword);
+    if (trimmedPassword.length < 4) {
+      setError("Password should be at least 4 characters.");
+      return;
+    }
+
+    const result = await resetPassword(trimmedEmail, trimmedPassword);
 
     if (!result.success) {
-      setError(result.message || "Invalid email or password.");
+      setError(result.message);
       return;
     }
 
-    router.replace("/home");
+    setSuccess(result.message);
+    setEmail("");
+    setNewPassword("");
   }
 
   return (
@@ -44,9 +53,9 @@ export default function Login() {
         <Text style={styles.logoLetter}>N</Text>
       </View>
 
-      <Text style={styles.logo}>NutriAcademy</Text>
+      <Text style={styles.title}>Reset Password</Text>
       <Text style={styles.subtitle}>
-        Professional Nutrition Learning Platform
+        Enter your registered email and create a new password.
       </Text>
 
       {error ? (
@@ -55,13 +64,20 @@ export default function Login() {
         </View>
       ) : null}
 
+      {success ? (
+        <View style={styles.successBox}>
+          <Text style={styles.successText}>{success}</Text>
+        </View>
+      ) : null}
+
       <TextInput
         style={styles.input}
-        placeholder="Email address"
+        placeholder="Registered email"
         value={email}
         onChangeText={(text) => {
           setEmail(text);
           setError("");
+          setSuccess("");
         }}
         autoCapitalize="none"
         keyboardType="email-address"
@@ -70,11 +86,12 @@ export default function Login() {
       <View style={styles.passwordWrapper}>
         <TextInput
           style={styles.passwordInput}
-          placeholder="Password"
-          value={password}
+          placeholder="New password"
+          value={newPassword}
           onChangeText={(text) => {
-            setPassword(text);
+            setNewPassword(text);
             setError("");
+            setSuccess("");
           }}
           secureTextEntry={!showPassword}
         />
@@ -84,19 +101,12 @@ export default function Login() {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity
-        style={styles.forgotButton}
-        onPress={() => router.push("/forgot-password" as any)}
-      >
-        <Text style={styles.forgotText}>Forgot Password?</Text>
+      <TouchableOpacity style={styles.button} onPress={handleResetPassword}>
+        <Text style={styles.buttonText}>Reset Password</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => router.push("/signup")}>
-        <Text style={styles.link}>New student? Create account</Text>
+      <TouchableOpacity onPress={() => router.replace("/")}>
+        <Text style={styles.link}>Back to Login</Text>
       </TouchableOpacity>
     </View>
   );
@@ -127,8 +137,8 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
 
-  logo: {
-    fontSize: 36,
+  title: {
+    fontSize: 32,
     fontWeight: "900",
     color: "#0D2818",
     textAlign: "center",
@@ -137,9 +147,10 @@ const styles = StyleSheet.create({
   subtitle: {
     textAlign: "center",
     color: "#64748B",
-    marginBottom: 32,
+    marginBottom: 28,
     marginTop: 8,
     fontWeight: "600",
+    lineHeight: 22,
   },
 
   errorBox: {
@@ -157,6 +168,21 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
+  successBox: {
+    backgroundColor: "#DCFCE7",
+    borderWidth: 1,
+    borderColor: "#86EFAC",
+    padding: 13,
+    borderRadius: 14,
+    marginBottom: 14,
+  },
+
+  successText: {
+    color: "#166534",
+    fontWeight: "800",
+    textAlign: "center",
+  },
+
   input: {
     backgroundColor: "white",
     padding: 16,
@@ -169,7 +195,7 @@ const styles = StyleSheet.create({
   passwordWrapper: {
     backgroundColor: "white",
     borderRadius: 14,
-    marginBottom: 8,
+    marginBottom: 14,
     borderWidth: 1,
     borderColor: "#E5F0E8",
     flexDirection: "row",
@@ -185,16 +211,6 @@ const styles = StyleSheet.create({
   showText: {
     color: "#166534",
     fontWeight: "900",
-  },
-
-  forgotButton: {
-    alignSelf: "flex-end",
-    marginBottom: 12,
-  },
-
-  forgotText: {
-    color: "#166534",
-    fontWeight: "800",
   },
 
   button: {

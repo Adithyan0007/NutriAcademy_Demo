@@ -56,9 +56,7 @@ export async function signupUser(
     createdAt: new Date().toISOString(),
   };
 
-  const updatedUsers = [...users, newUser];
-
-  await saveUsers(updatedUsers);
+  await saveUsers([...users, newUser]);
 
   return {
     success: true,
@@ -70,17 +68,52 @@ export async function loginUser(email: string, password: string) {
   const users = await getUsers();
 
   const user = users.find(
-    (u) =>
-      u.email.toLowerCase() === email.toLowerCase() && u.password === password,
+    (item) =>
+      item.email.toLowerCase() === email.toLowerCase() &&
+      item.password === password,
   );
 
   if (!user) {
-    return { success: false, message: "Invalid email or password" };
+    return {
+      success: false,
+      message: "Invalid email or password",
+    };
   }
 
   await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
 
-  return { success: true, user };
+  return {
+    success: true,
+    user,
+  };
+}
+
+export async function resetPassword(email: string, newPassword: string) {
+  const users = await getUsers();
+
+  const existingUser = users.find(
+    (user) => user.email.toLowerCase() === email.toLowerCase(),
+  );
+
+  if (!existingUser) {
+    return {
+      success: false,
+      message: "No account found with this email",
+    };
+  }
+
+  const updatedUsers = users.map((user) =>
+    user.email.toLowerCase() === email.toLowerCase()
+      ? { ...user, password: newPassword }
+      : user,
+  );
+
+  await saveUsers(updatedUsers);
+
+  return {
+    success: true,
+    message: "Password reset successful. Please login.",
+  };
 }
 
 export async function getCurrentUser(): Promise<User | null> {
@@ -134,6 +167,7 @@ export async function purchaseCourse(courseId: string) {
 
   return updatedUser;
 }
+
 export async function markLessonComplete(courseId: string, lessonId: string) {
   const currentUser = await getCurrentUser();
   if (!currentUser) return null;
@@ -142,14 +176,12 @@ export async function markLessonComplete(courseId: string, lessonId: string) {
 
   const existingCompleted = currentUser.completedLessons?.[courseId] || [];
 
-  const updatedCompleted = {
-    ...currentUser.completedLessons,
-    [courseId]: [...new Set([...existingCompleted, lessonId])],
-  };
-
   const updatedUser = {
     ...currentUser,
-    completedLessons: updatedCompleted,
+    completedLessons: {
+      ...currentUser.completedLessons,
+      [courseId]: [...new Set([...existingCompleted, lessonId])],
+    },
   };
 
   const updatedUsers = users.map((user) =>
@@ -162,12 +194,6 @@ export async function markLessonComplete(courseId: string, lessonId: string) {
   return updatedUser;
 }
 
-export async function getCourseProgress(courseId: string) {
-  const user = await getCurrentUser();
-  if (!user) return [];
-
-  return user.completedLessons?.[courseId] || [];
-}
 export async function addCertificate(courseId: string) {
   const currentUser = await getCurrentUser();
   if (!currentUser) return null;

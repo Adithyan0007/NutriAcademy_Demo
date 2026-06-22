@@ -12,10 +12,12 @@ export default function RootLayout() {
     async function protectRoutes() {
       const user = await getCurrentUser();
 
-      const currentRoute = segments[0];
+      const currentRoute = String(segments[0] || "");
 
       const isPublicRoute =
-        currentRoute === undefined || currentRoute === "signup";
+        currentRoute === "" ||
+        currentRoute === "signup" ||
+        currentRoute === "forgot-password";
 
       if (!user && !isPublicRoute) {
         router.replace("/");
@@ -50,6 +52,7 @@ export default function RootLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="signup" />
+      <Stack.Screen name="forgot-password" />
       <Stack.Screen name="home" />
       <Stack.Screen name="course/[id]" />
       <Stack.Screen name="lesson/[courseId]/[lessonId]" />
