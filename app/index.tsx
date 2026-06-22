@@ -1,29 +1,36 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-  Alert,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+
 import { loginUser } from "../data/localDb";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const [error, setError] = useState("");
+
   async function handleLogin() {
-    if (!email || !password) {
-      Alert.alert("Missing details", "Please enter email and password");
+    setError("");
+
+    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedPassword = password.trim();
+
+    if (!trimmedEmail || !trimmedPassword) {
+      setError("Please enter email and password.");
       return;
     }
 
-    const result = await loginUser(email, password);
+    const result = await loginUser(trimmedEmail, trimmedPassword);
 
     if (!result.success) {
-      Alert.alert("Login failed", result.message);
+      setError(result.message || "Invalid email or password.");
       return;
     }
 
@@ -32,22 +39,37 @@ export default function Login() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.logo}>NUTRIACADEMY</Text>
-      <Text style={styles.subtitle}>Professional nutrition courses</Text>
+      <Text style={styles.logo}>NutriAcademy</Text>
+      <Text style={styles.subtitle}>
+        Professional Nutrition Learning Platform
+      </Text>
+
+      {error ? (
+        <View style={styles.errorBox}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      ) : null}
 
       <TextInput
         style={styles.input}
         placeholder="Email address"
         value={email}
-        onChangeText={setEmail}
+        onChangeText={(text) => {
+          setEmail(text);
+          setError("");
+        }}
         autoCapitalize="none"
+        keyboardType="email-address"
       />
 
       <TextInput
         style={styles.input}
         placeholder="Password"
         value={password}
-        onChangeText={setPassword}
+        onChangeText={(text) => {
+          setPassword(text);
+          setError("");
+        }}
         secureTextEntry
       />
 
@@ -67,44 +89,66 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
     justifyContent: "center",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#F0FDF4",
   },
+
   logo: {
     fontSize: 36,
     fontWeight: "900",
-    color: "#166534",
+    color: "#0D2818",
     textAlign: "center",
   },
+
   subtitle: {
     textAlign: "center",
     color: "#64748B",
-    marginBottom: 35,
+    marginBottom: 32,
     marginTop: 8,
+    fontWeight: "600",
   },
+
+  errorBox: {
+    backgroundColor: "#FEE2E2",
+    borderWidth: 1,
+    borderColor: "#FCA5A5",
+    padding: 13,
+    borderRadius: 14,
+    marginBottom: 14,
+  },
+
+  errorText: {
+    color: "#B91C1C",
+    fontWeight: "800",
+    textAlign: "center",
+  },
+
   input: {
     backgroundColor: "white",
     padding: 16,
     borderRadius: 14,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E5F0E8",
   },
+
   button: {
-    backgroundColor: "#16A34A",
+    backgroundColor: "#166534",
     padding: 16,
     borderRadius: 14,
     marginTop: 8,
   },
+
   buttonText: {
     color: "white",
-    fontWeight: "800",
+    fontWeight: "900",
     textAlign: "center",
     fontSize: 16,
   },
+
   link: {
-    color: "#16A34A",
+    color: "#166534",
     textAlign: "center",
     marginTop: 20,
-    fontWeight: "700",
+    fontWeight: "800",
   },
 });
